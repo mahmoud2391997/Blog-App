@@ -1,42 +1,63 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+
 function SingleBlog() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BlogContent />
+    </Suspense>
+  );
+}
+
+function BlogContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const category = searchParams.get("category");
   const [data, setData] = useState({});
+  const [isTruncated, setIsTruncated] = useState(true);
 
   console.log(id);
   console.log(category);
+
   useEffect(() => {
-    axios
-      .get(
-        `https://newsapi.org/v2/everything?q=${category}&apiKey=d84d60794beb40f0b45129ff86ae475b`
-      )
-      .then(({ data }) => {
-        setData(data.articles[id]);
-      });
-  }, [category]);
-  const [isTruncated, setIsTruncated] = useState(true);
+    if (category) {
+      axios
+        .get(
+          `https://newsapi.org/v2/everything?q=${category}&apiKey=d84d60794beb40f0b45129ff86ae475b`
+        )
+        .then((response) => {
+          setData(response.data.articles[id]);
+        })
+        .catch((error) => {
+          console.error("Error fetching data: ", error);
+        });
+    }
+  }, [category, id]);
+
   return (
-    <div className="flex justify-center items-center  mb-36">
-      <div className={` w-[80%]   bg-gray-50 flex flex-col items-center`}>
+    <div className="flex justify-center items-center mb-36">
+      <div className="w-[80%] bg-gray-50 flex flex-col items-center">
         <div className="w-full h-[400px]">
-          <img className="h-full w-full" src={data.urlToImage} />
+          <img
+            className="h-full w-full"
+            src={data.urlToImage}
+            alt="Blog Image"
+          />
         </div>
 
-        <div className="flex justify-center  flex-col items-center  mt-7 font-bold font-sans">
-          <p className=" text-4xl w-[60%] text-center">{data.title}</p>
+        <div className="flex justify-center flex-col items-center mt-7 font-bold font-sans">
+          <p className="text-4xl w-[60%] text-center">{data.title}</p>
           <p className="font-sans font-light mt-7 text-lg">
-            {data.author} . {data.publishedAt}
+            {data.author} • {data.publishedAt}
           </p>
           <p className="font-sans font-semibold text-lg mt-7 text-center">
             {data.description}
           </p>
-          <p className=" text-blue-500 cursor-pointer underline mt-7">
+          <p className="text-blue-500 cursor-pointer underline mt-7">
             {data.url}
           </p>
           <p
@@ -67,11 +88,11 @@ function SingleBlog() {
             duis eu deserunt. Occaecat do ut ut labore cillum enim dolore ad
             enim enim id. Aliquip do veniam ad excepteur ad cillum qui deserunt
             nostrud sunt aliqua duis sunt occaecat. Laborum incididunt commodo
-            ullamco proident quis.{" "}
+            ullamco proident quis.
           </p>
           <button
             onClick={() => setIsTruncated(!isTruncated)}
-            className=" text-blue-500 cursor-pointer underline "
+            className="text-blue-500 cursor-pointer underline"
           >
             {isTruncated ? "Read More" : "Show Less"}
           </button>
